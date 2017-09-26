@@ -1,5 +1,6 @@
 package net.cserny.tdd.dao;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -45,6 +46,29 @@ public class HibernatePersonDaoTest {
         List<Person> resultList = personDao.findByLastname(name);
 
         Assert.assertEquals(smiths, resultList);
+        verify(factory, session, query);
+    }
+
+    @Test
+    public void findByLastnameReturnsEmptyListUponException() throws Exception {
+        String hql = "from Person p where p.lastname = :lastname";
+        String name = "Smith";
+
+        HibernateException error = new HibernateException("");
+        expect(factory.getCurrentSession()).andReturn(session);
+        expect(session.createQuery(hql)).andReturn(query);
+        expect(query.setParameter("lastname", name)).andReturn(query);
+        expect(query.list()).andThrow(error);
+        replay(factory, session, query);
+
+        HibernatePersonDao personDao = new HibernatePersonDao();
+        personDao.setSessionFactory(factory);
+        try {
+            personDao.findByLastname(name);
+        } catch (RuntimeException expected) {
+            Assert.assertSame(error, expected.getCause());
+        }
+
         verify(factory, session, query);
     }
 }

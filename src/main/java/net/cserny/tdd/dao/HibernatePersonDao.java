@@ -1,5 +1,6 @@
 package net.cserny.tdd.dao;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -34,10 +35,14 @@ public class HibernatePersonDao implements PersonDao {
     }
 
     public List<Person> findByLastname(String lastname) {
-        Session session = sessionFactory.getCurrentSession();
-        String hql = "from Person p where p.lastname = :lastname";
-        Query query = session.createQuery(hql);
-        query.setParameter("lastname", lastname);
-        return query.list();
+        try {
+            Session session = sessionFactory.getCurrentSession();
+            String hql = "from Person p where p.lastname = :lastname";
+            Query query = session.createQuery(hql);
+            query.setParameter("lastname", lastname);
+            return query.list();
+        } catch (HibernateException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
